@@ -11,21 +11,19 @@ def index():
 
     if request.method == "POST":
         try:
-            # Get file and pattern input
             file = request.files["file"]
             pattern = request.form["pattern"]
             
             if not file or not pattern:
                 error = "Please provide a file and a regex pattern."
             else:
-                # Read file lines
                 content = file.read().decode("utf-8").splitlines()
                 
-                # Find matches using regex
                 matches = [
                     (i + 1, line)
                     for i, line in enumerate(content)
-                    if re.search(pattern, line)
+                    for word in line.split()
+                    if re.fullmatch(pattern, word)
                 ]
         except re.error:
             error = "Invalid regex pattern. Please check your input."
