@@ -419,7 +419,7 @@ class Bank_TM:
         ('q5', '6', '$') : ('q4', '#', '7', 'L', 'L'),
         ('q5', '7', '$') : ('q4', '#', '8', 'L', 'L'),
         ('q5', '8', '$') : ('q4', '#', '9', 'L', 'L'),
-        ('q5', '9', '$') : ('q4', '#', '0', 'L', 'L'),
+        ('q5', '9', '$') : ('q5', '#', '0', 'L', 'L'),
         ('q4', '#', '$') : ('q0', '#', '$', 'R', 'L'),
         ('q5', '#', '$') : ('q0', '#', '$', 'R', 'L'),
 
@@ -880,7 +880,7 @@ class Bank_TM:
     def move_head(self):
         while self.state != 'qh':
             output = self.transitions[(self.state, self.input_tape[self.input_tape_head], self.balance_tape[self.balance_tape_head])]
-            if self.state == 'q4' and self.balance_tape[self.balance_tape_head] == '$':
+            if self.state == 'q4' and self.balance_tape[self.balance_tape_head] == '$' and output[2] != '$':
                 self.balance_tape.insert(self.balance_tape_head, '$')
                 self.balance_tape_head += 1
             if self.state == 'q1':
