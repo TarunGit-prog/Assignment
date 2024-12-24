@@ -1,102 +1,79 @@
-class Interpreter:
-    def _init_(self):
-        self.symbol_table = {}
+# Context-Free Grammar (CFG) for a Custom IoT Scripting Language
+# The language is designed to control IoT devices with simple commands.
 
-    def execute(self, node):
-        if not isinstance(node, dict) or "type" not in node:
-            raise TypeError(f"Invalid node: {node}")
+# Grammar Rules:
+# <program>       ::= <statement> | <statement> <program>
+# <statement>     ::= <device_command>
+# <device_command>::= 'TURN' <device> <state>
+#                    | 'SET' <device> 'TO' <value>
+# <device>        ::= 'LIGHT' | 'FAN' | 'THERMOSTAT'
+# <state>         ::= 'ON' | 'OFF'
+# <value>         ::= <number>
+# <number>        ::= <digit> | <digit> <number>
+# <digit>         ::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
 
-        if node["type"] == "declaration":
-            self.symbol_table[node["id"]] = self.evaluate(node["expression"])
-        elif node["type"] == "assignment":
-            self.symbol_table[node["id"]] = self.evaluate(node["expression"])
-        elif node["type"] == "conditional":
-            condition = self.evaluate(node["condition"])
-            if condition:
-                self.execute_block(node["if_block"]["statements"])  # Access 'statements' directly
-            elif "else_block" in node:
-                self.execute_block(node["else_block"]["statements"])  # Access 'statements' directly
-        elif node["type"] == "loop":
-            while self.evaluate(node["condition"]):
-                self.execute_block(node["block"]["statements"])  # Access 'statements' directly
-        elif node["type"] == "write":
-            actuator = node["actuator"]
-            value = self.evaluate(node["value"])
-            print(f"Actuating {actuator}: {value}")
-        elif node["type"] == "block":
-            self.execute_block(node["statements"])  # Correctly accessing 'statements'
-        else:
-            raise ValueError(f"Unknown node type: {node['type']}")
+# Example Programs:
+# 1. TURN LIGHT ON
+# 2. SET THERMOSTAT TO 22
+# 3. TURN FAN OFF
 
-    def evaluate(self, expression):
-        if expression["type"] == "num":
-            return expression["value"]
-        elif expression["type"] == "id":
-            if expression["id"] not in self.symbol_table:
-                raise NameError(f"Undefined variable: {expression['id']}")
-            return self.symbol_table[expression["id"]]
-        elif expression["type"] == "binary":
-            left = self.evaluate(expression["left"])
-            right = self.evaluate(expression["right"])
-            operator = expression["operator"]
-            if operator == "+":
-                return left + right
-            elif operator == "-":
-                return left - right
-            elif operator == "*":
-                return left * right
-            elif operator == "/":
-                return left / right
-            elif operator == ">":
-                return left > right
-            elif operator == "<":
-                return left < right
-            elif operator == "==":
-                return left == right
-            elif operator == "!=":
-                return left != right
-            elif operator == ">=":
-                return left >= right
-            elif operator == "<=":
-                return left <= right
+# Implementation of a simple parser and interpreter
+import re
+
+class IoTScriptingLanguageParser:
+    def __init__(self):
+        self.device_states = {}
+
+    def parse_program(self, program):
+        statements = program.strip().split('\n')
+        for statement in statements:
+            if statement.strip():
+                try:
+                    self.parse_statement(statement.strip())
+                except ValueError as e:
+                    print(f"Error: {e}")
+
+    def parse_statement(self, statement):
+        if statement.startswith("TURN"):
+            match = re.match(r"TURN (LIGHT|FAN|THERMOSTAT) (ON|OFF)", statement)
+            if match:
+                device, state = match.groups()
+                self.device_states[device] = state
+                print(f"{device} turned {state}")
             else:
-                raise ValueError(f"Unknown operator: {operator}")
-        elif expression["type"] == "str":  # Handle string literals
-            return expression["value"]
+                raise ValueError(f"Invalid TURN command: {statement}")
+        elif statement.startswith("SET"):
+            match = re.match(r"SET (LIGHT|FAN|THERMOSTAT) TO (\d+)", statement)
+            if match:
+                device, value = match.groups()
+                self.device_states[device] = int(value)
+                print(f"{device} set to {value}")
+            else:
+                raise ValueError(f"Invalid SET command: {statement}")
         else:
-            raise TypeError(f"Invalid expression: {expression}")
+            raise ValueError(f"Invalid statement: {statement}")
 
-    def execute_block(self, statements):
-        if not isinstance(statements, list):  # Check if the statements are a list
-            raise TypeError(f"Block statements should be a list: {statements}")
-        for stmt in statements:
-            self.execute(stmt)
+# Sample usage
+if __name__ == "__main__":
+    parser = IoTScriptingLanguageParser()
 
+    try:
+        print("Enter your IoT commands below (end with an empty line):")
+        user_program = ""
+        while True:
+            try:
+                line = input()
+                if line.strip() == "":
+                    break
+                user_program += line + "\n"
+            except EOFError:
+                break
 
-# Example Parse Tree for the IoT Program
-parse_tree = {
-    "type": "conditional",
-    "condition": {
-        "type": "binary",
-        "left": {"type": "id", "id": "temp"},
-        "operator": ">",
-        "right": {"type": "num", "value": 30}
-    },
-    "if_block": {
-        "type": "block",
-        "statements": [
-            {"type": "write", "actuator": "fan", "value": {"type": "str", "value": "on"}}
-        ]
-    },
-    "else_block": {
-        "type": "block",
-        "statements": [
-            {"type": "write", "actuator": "fan", "value": {"type": "str", "value": "off"}}
-        ]
-    }
-}
+        print("\nParsing and executing program:\n")
+        parser.parse_program(user_program)
 
-# Example Usage
-interpreter = Interpreter()
-interpreter.symbol_table = {"temp": 35}  # Simulate sensor reading
-interpreter.execute(parse_tree)
+        print("\nDevice States:")
+        for device, state in parser.device_states.items():
+            print(f"{device}: {state}")
+    except OSError as e:
+        print(f"Error: Unable to read input. Ensure the environment supports interactive input. ({e})")

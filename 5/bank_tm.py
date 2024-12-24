@@ -893,7 +893,6 @@ class Bank_TM:
         ('q8', '#', '7') : ('q8', '#', '7', 'S', 'L'),
         ('q8', '#', '8') : ('q8', '#', '8', 'S', 'L'),
         ('q8', '#', '9') : ('q8', '#', '9', 'S', 'L'),
-
         ('q8', '#', '$') : ('q10', '#', '$', 'S', 'R'),
         ('q9', '#', '$') : ('qe', '#', '$', 'S', 'S'),
 
@@ -929,7 +928,6 @@ class Bank_TM:
             if self.state == 'qe':
                 print("Error: Withdrawal greater than account balance")
                 return
-
     def run(self):
         while True:
             operation = input('''
@@ -946,7 +944,6 @@ Enter any operation:
             self.input_tape_head = 0
             self.balance_tape_head = 0
             self.move_head()
-
 tm = Bank_TM(200)
 tm.run()
 
